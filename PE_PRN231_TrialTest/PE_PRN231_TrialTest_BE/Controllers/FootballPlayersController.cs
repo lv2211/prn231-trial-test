@@ -1,5 +1,11 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.OData.Query;
+using Microsoft.AspNetCore.OData.Routing.Controllers;
 using Microsoft.EntityFrameworkCore;
+using PE.Core.Commons;
+using PE.Core.Contracts;
+using PE.Core.Dtos;
 using PE.Infrastructure;
 using PE.Infrastructure.Databases;
 
@@ -7,111 +13,186 @@ namespace PE_PRN231_TrialTest_BE.Controllers
 {
     [Route("api/premier-leauge")]
     [ApiController]
-    public class FootballPlayersController : ControllerBase
+    public class FootballPlayersController : ODataController
     {
         private readonly EnglishPremierLeague2024DbContext _context;
+        private readonly IFootballPlayerService _footballPlayerService;
 
-        public FootballPlayersController(EnglishPremierLeague2024DbContext context)
+        public FootballPlayersController(
+            EnglishPremierLeague2024DbContext context,
+            IFootballPlayerService footballPlayerService)
         {
             _context = context;
+            _footballPlayerService = footballPlayerService;
         }
 
-        // GET: api/FootballPlayers
-        [HttpGet]
-        public async Task<ActionResult<IEnumerable<FootballPlayer>>> GetFootballPlayers()
+        /// <summary>
+        /// Get players
+        /// </summary>
+        /// <returns></returns>
+        [HttpGet("players")]
+        [EnableQuery]
+        [Authorize(Policy = "ReadPolicy")]
+        [ProducesResponseType(StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+        [ProducesResponseType(StatusCodes.Status403Forbidden)]
+        [ProducesResponseType(StatusCodes.Status404NotFound)]
+        //[ProducesErrorResponseType(typeof(ApiResponseModel<string>))]
+        public async Task<ActionResult<ApiResponseModel<IEnumerable<FootballPlayerResponse>>>> GetFootballPlayers()
         {
-            return await _context.FootballPlayers.ToListAsync();
+            var players = await _footballPlayerService.GetPlayers();
+            if (!players.Any()) return NotFound(new ApiResponseModel<string>
+            {
+                StatusCode = System.Net.HttpStatusCode.NotFound,
+                Message = "No data of players!"
+            });
+            //return Ok(new ApiResponseModel<IEnumerable<FootballPlayerResponse>>
+            //{
+            //    StatusCode = System.Net.HttpStatusCode.OK,
+            //    Message = "Fetch data successfully!",
+            //    // OData can work with queryable collection.
+            //    Response = players.AsQueryable()
+            //});
+            return Ok(players.AsQueryable());
         }
 
-        // GET: api/FootballPlayers/5
-        [HttpGet("{id}")]
-        public async Task<ActionResult<FootballPlayer>> GetFootballPlayer(string id)
+        /// <summary>
+        /// Get player
+        /// </summary>
+        /// <param name="id">Player's id</param>
+        /// <returns></returns>
+        [HttpGet("players/{id}")]
+        [Authorize(Policy = "ReadPolicy")]
+        [ProducesResponseType(StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+        [ProducesResponseType(StatusCodes.Status403Forbidden)]
+        [ProducesResponseType(StatusCodes.Status404NotFound)]
+        public async Task<ActionResult<FootballPlayerResponse>> GetFootballPlayer(string id)
         {
-            var footballPlayer = await _context.FootballPlayers.FindAsync(id);
+            var footballPlayer = await _footballPlayerService.GetPlayer(id);
 
             if (footballPlayer == null)
             {
-                return NotFound();
+                return NotFound(new ApiResponseModel<string>
+                {
+                    StatusCode = System.Net.HttpStatusCode.NotFound,
+                    Message = "Player not found!"
+                });
             }
-
-            return footballPlayer;
+            return Ok(footballPlayer);
         }
 
-        // PUT: api/FootballPlayers/5
-        // To protect from overposting attacks, see https://go.microsoft.com/fwlink/?linkid=2123754
-        [HttpPut("{id}")]
-        public async Task<IActionResult> PutFootballPlayer(string id, FootballPlayer footballPlayer)
+        
+        /// <summary>
+        /// Update player
+        /// </summary>
+        /// <param name="id">Player's id</param>
+        /// <param name="request">Model for updating player</param>
+        /// <returns></returns>
+        [HttpPut("player/{id}")]
+        [Authorize(Policy = "OtherPolicy")]
+        [ProducesResponseType(StatusCodes.Status204NoContent)]
+        [ProducesResponseType(StatusCodes.Status400BadRequest)]
+        [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+        [ProducesResponseType(StatusCodes.Status403Forbidden)]
+        public async Task<IActionResult> UpdateFootballPlayer(string id, UpdateFootballPlayerRequest request)
         {
-            if (id != footballPlayer.FootballPlayerId)
+            if (id != request.FootballPlayerId)
             {
-                return BadRequest();
+                return BadRequest(new ApiResponseModel<string>
+                {
+                    StatusCode = System.Net.HttpStatusCode.BadRequest,
+                    Message = "Id is not matched!"
+                });
             }
 
-            _context.Entry(footballPlayer).State = EntityState.Modified;
-
-            try
+            if (request.Birthday >= new DateTime(2007, 01, 01))
             {
-                await _context.SaveChangesAsync();
+                return BadRequest(new ApiResponseModel<string>
+                {
+                    StatusCode = System.Net.HttpStatusCode.BadRequest,
+                    Message = "Birthday must be before 2007!"
+                });
             }
-            catch (DbUpdateConcurrencyException)
+            if (!ModelState.IsValid) return BadRequest();
+            
+            var result = await _footballPlayerService.UpdatePlayer(request);
+            if (!result) return BadRequest(new ApiResponseModel<string>
             {
-                if (!FootballPlayerExists(id))
-                {
-                    return NotFound();
-                }
-                else
-                {
-                    throw;
-                }
-            }
+                StatusCode = System.Net.HttpStatusCode.BadRequest,
+                Message = "Update failed!"
+            });
 
             return NoContent();
         }
 
-        // POST: api/FootballPlayers
-        // To protect from overposting attacks, see https://go.microsoft.com/fwlink/?linkid=2123754
-        [HttpPost]
-        public async Task<ActionResult<FootballPlayer>> PostFootballPlayer(FootballPlayer footballPlayer)
+        /// <summary>
+        /// Create player
+        /// </summary>
+        /// <param name="request">Model for creating player</param>
+        /// <returns></returns>
+        [HttpPost("player")]
+        [Authorize(Policy = "OtherPolicy")]
+        [ProducesResponseType(StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status400BadRequest)]
+        [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+        [ProducesResponseType(StatusCodes.Status403Forbidden)]
+        public async Task<ActionResult<ApiResponseModel<string>>> AddFootballPlayer(CreateFootballPlayerRequest request)
         {
-            _context.FootballPlayers.Add(footballPlayer);
-            try
-            {
-                await _context.SaveChangesAsync();
-            }
-            catch (DbUpdateException)
-            {
-                if (FootballPlayerExists(footballPlayer.FootballPlayerId))
+            if (request.Birthday >= new DateTime(2007, 01, 01))
+                return BadRequest(new ApiResponseModel<string>
                 {
-                    return Conflict();
-                }
-                else
-                {
-                    throw;
-                }
-            }
+                    StatusCode = System.Net.HttpStatusCode.BadRequest,
+                    Message = "Birthday must be before 2007!"
+                });
+            if (!ModelState.IsValid) return BadRequest();
 
-            return CreatedAtAction("GetFootballPlayer", new { id = footballPlayer.FootballPlayerId }, footballPlayer);
+            var result = await _footballPlayerService.AddPlayer(request);
+            if (!result) return BadRequest(new ApiResponseModel<string>
+            {
+                StatusCode = System.Net.HttpStatusCode.BadRequest,
+                Message = "Add failed!"
+            });
+
+            return Ok(new ApiResponseModel<string>
+            {
+                StatusCode = System.Net.HttpStatusCode.OK,
+                Message = "Add successfully!"
+            });
         }
 
-        // DELETE: api/FootballPlayers/5
-        [HttpDelete("{id}")]
+        /// <summary>
+        /// Delete player
+        /// </summary>
+        /// <param name="id">Player's id</param>
+        /// <returns></returns>
+        [HttpDelete("player/{id}")]
+        [Authorize(Policy = "OtherPolicy")]
+        [ProducesResponseType(StatusCodes.Status204NoContent)]
+        [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+        [ProducesResponseType(StatusCodes.Status403Forbidden)]
+        [ProducesResponseType(StatusCodes.Status404NotFound)]
         public async Task<IActionResult> DeleteFootballPlayer(string id)
         {
-            var footballPlayer = await _context.FootballPlayers.FindAsync(id);
+            var footballPlayer = await _footballPlayerService.GetPlayerById(id);
             if (footballPlayer == null)
             {
-                return NotFound();
+                return NotFound(new ApiResponseModel<string>
+                {
+                    StatusCode = System.Net.HttpStatusCode.NotFound,
+                    Message = "Player not found!"
+                });
             }
 
-            _context.FootballPlayers.Remove(footballPlayer);
-            await _context.SaveChangesAsync();
-
+            var result = await _footballPlayerService.DeletePlayer(footballPlayer);
+            if (!result)
+                return BadRequest(new ApiResponseModel<string>
+                {
+                    StatusCode = System.Net.HttpStatusCode.BadRequest,
+                    Message = "Delete failed!"
+                });
             return NoContent();
         }
 
-        private bool FootballPlayerExists(string id)
-        {
-            return _context.FootballPlayers.Any(e => e.FootballPlayerId == id);
-        }
     }
 }

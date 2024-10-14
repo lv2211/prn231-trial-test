@@ -9,6 +9,12 @@ namespace PE.Service
         public MappingProfileExtension()
         {
             CreateMap<PremierLeagueAccount, SigninAccountResponse>();
+
+            CreateMap<FootballPlayer, FootballPlayerResponse>()
+                .ForMember(dest => dest.ClubName, opt => opt.MapFrom(src => src.FootballClub.ClubName));
+
+            CreateMap<CreateFootballPlayerRequest, FootballPlayer>();
+            CreateMap<UpdateFootballPlayerRequest, FootballPlayer>();
         }
     }
 }
