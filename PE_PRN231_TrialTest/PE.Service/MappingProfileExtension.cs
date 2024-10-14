@@ -8,7 +8,8 @@ namespace PE.Service
     {
         public MappingProfileExtension()
         {
-            CreateMap<PremierLeagueAccount, SigninAccountResponse>();
+            CreateMap<PremierLeagueAccount, SigninAccountResponse>()
+                .ForMember(dest => dest.Role, opt => opt.MapFrom(src => src.Role.ToString()));
 
             CreateMap<FootballPlayer, FootballPlayerResponse>()
                 .ForMember(dest => dest.ClubName, opt => opt.MapFrom(src => src.FootballClub.ClubName));
