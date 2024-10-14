@@ -1,0 +1,55 @@
+﻿@page
+@model PE_PRN231_TrialTest_FE.Pages.FootballPlayers.DetailsModel
+
+@{
+    ViewData["Title"] = "Details";
+}
+
+<h1>Details</h1>
+
+<div>
+    <h4>FootballPlayer</h4>
+    <hr />
+    <dl class="row">
+        <dt class="col-sm-2">
+            @Html.DisplayNameFor(model => model.FootballPlayer.FullName)
+        </dt>
+        <dd class="col-sm-10">
+            @Html.DisplayFor(model => model.FootballPlayer.FullName)
+        </dd>
+        <dt class="col-sm-2">
+            @Html.DisplayNameFor(model => model.FootballPlayer.Achievements)
+        </dt>
+        <dd class="col-sm-10">
+            @Html.DisplayFor(model => model.FootballPlayer.Achievements)
+        </dd>
+        <dt class="col-sm-2">
+            @Html.DisplayNameFor(model => model.FootballPlayer.Birthday)
+        </dt>
+        <dd class="col-sm-10">
+            @Html.DisplayFor(model => model.FootballPlayer.Birthday)
+        </dd>
+        <dt class="col-sm-2">
+            @Html.DisplayNameFor(model => model.FootballPlayer.PlayerExperiences)
+        </dt>
+        <dd class="col-sm-10">
+            @Html.DisplayFor(model => model.FootballPlayer.PlayerExperiences)
+        </dd>
+        <dt class="col-sm-2">
+            @Html.DisplayNameFor(model => model.FootballPlayer.Nomination)
+        </dt>
+        <dd class="col-sm-10">
+            @Html.DisplayFor(model => model.FootballPlayer.Nomination)
+        </dd>
+        <dt class="col-sm-2">
+            @Html.DisplayNameFor(model => model.FootballPlayer.FootballClub)
+        </dt>
+        <dd class="col-sm-10">
+            @Html.DisplayFor(model => model.FootballPlayer.FootballClub.FootballClubId)
+        </dd>
+    </dl>
+</div>
+<div>
+    <a asp-page="./Edit" asp-route-id="@Model.FootballPlayer.FootballPlayerId">Edit</a> |
+    <a asp-page="./Index">Back to List</a>
+</div>

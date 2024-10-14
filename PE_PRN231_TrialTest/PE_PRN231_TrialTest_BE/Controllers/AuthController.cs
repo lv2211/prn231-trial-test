@@ -22,7 +22,7 @@ namespace PE_PRN231_TrialTest_BE.Controllers
         [ProducesResponseType(StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
         [ProducesErrorResponseType(typeof(ApiResponseModel<string>))]
-        public async Task<ActionResult<ApiResponseModel<SigninAccountResponse>>> Login([FromBody] SigninRequest request)
+        public async Task<ActionResult<SigninAccountResponse>> Login([FromBody] SigninRequest request)
         {
             //if (string.IsNullOrEmpty(request.Email) || string.IsNullOrEmpty(request.Password))
             //    return BadRequest(new ApiResponseModel<string> { Message = "Email and password are required!", StatusCode = System.Net.HttpStatusCode.BadRequest });
@@ -35,12 +35,7 @@ namespace PE_PRN231_TrialTest_BE.Controllers
                 Message = "Account is not found! Please check email and password again.",
                 Response = null
             });
-            return Ok(new ApiResponseModel<SigninAccountResponse>
-            {
-                StatusCode = System.Net.HttpStatusCode.OK,
-                Message = "Success",
-                Response = account
-            });
+            return Ok(account);
         }
     }
 }

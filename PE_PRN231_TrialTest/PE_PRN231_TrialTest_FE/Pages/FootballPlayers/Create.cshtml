@@ -1,0 +1,63 @@
+﻿@page
+@model PE_PRN231_TrialTest_FE.Pages.FootballPlayers.CreateModel
+
+@{
+    ViewData["Title"] = "Create";
+}
+
+<h1>Create</h1>
+
+<h4>FootballPlayer</h4>
+<hr />
+<div class="row">
+    <div class="col-md-4">
+        <form method="post">
+            <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+            <div class="form-group">
+                <label asp-for="FootballPlayer.FootballPlayerId" class="control-label"></label>
+                <input asp-for="FootballPlayer.FootballPlayerId" class="form-control" />
+                <span asp-validation-for="FootballPlayer.FootballPlayerId" class="text-danger"></span>
+            </div>
+            <div class="form-group">
+                <label asp-for="FootballPlayer.FullName" class="control-label"></label>
+                <input asp-for="FootballPlayer.FullName" class="form-control" />
+                <span asp-validation-for="FootballPlayer.FullName" class="text-danger"></span>
+            </div>
+            <div class="form-group">
+                <label asp-for="FootballPlayer.Achievements" class="control-label"></label>
+                <input asp-for="FootballPlayer.Achievements" class="form-control" />
+                <span asp-validation-for="FootballPlayer.Achievements" class="text-danger"></span>
+            </div>
+            <div class="form-group">
+                <label asp-for="FootballPlayer.Birthday" class="control-label"></label>
+                <input asp-for="FootballPlayer.Birthday" class="form-control" />
+                <span asp-validation-for="FootballPlayer.Birthday" class="text-danger"></span>
+            </div>
+            <div class="form-group">
+                <label asp-for="FootballPlayer.PlayerExperiences" class="control-label"></label>
+                <input asp-for="FootballPlayer.PlayerExperiences" class="form-control" />
+                <span asp-validation-for="FootballPlayer.PlayerExperiences" class="text-danger"></span>
+            </div>
+            <div class="form-group">
+                <label asp-for="FootballPlayer.Nomination" class="control-label"></label>
+                <input asp-for="FootballPlayer.Nomination" class="form-control" />
+                <span asp-validation-for="FootballPlayer.Nomination" class="text-danger"></span>
+            </div>
+            <div class="form-group">
+                <label asp-for="FootballPlayer.FootballClubId" class="control-label"></label>
+                <select asp-for="FootballPlayer.FootballClubId" class ="form-control" asp-items="ViewBag.FootballClubId"></select>
+            </div>
+            <div class="form-group">
+                <input type="submit" value="Create" class="btn btn-primary" />
+            </div>
+        </form>
+    </div>
+</div>
+
+<div>
+    <a asp-page="Index">Back to List</a>
+</div>
+
+@section Scripts {
+    @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
+}
