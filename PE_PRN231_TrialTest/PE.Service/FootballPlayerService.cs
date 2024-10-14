@@ -56,6 +56,11 @@ namespace PE.Service
             }
         }
 
+        public async Task<IEnumerable<FootballClub>> GetClubs() => await _unitOfWork.FootballClubRepository
+            .GetAll()
+            .AsNoTracking()
+            .ToListAsync();
+
         public async Task<FootballPlayerResponse?> GetPlayer(string id)
         {
             var player = await _unitOfWork.FootballPlayerRepository.GetAll()

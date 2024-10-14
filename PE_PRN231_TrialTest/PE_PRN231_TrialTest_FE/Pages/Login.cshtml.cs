@@ -35,6 +35,11 @@ namespace PE_PRN231_TrialTest_FE.Pages
                 var loginResponse = await response.Content.ReadFromJsonAsync<AccountResponse>();
                 if (loginResponse is not null)
                 {
+                    if (loginResponse.Role == "3" || loginResponse.Role == "4")
+                    {
+                        ModelState.AddModelError(string.Empty, "You are not authorized to access this page.");
+                        return Page();
+                    }
                     _httpContextAccessor.HttpContext?.Session.SetString("AccessToken", loginResponse.AccessToken);
                     _httpContextAccessor.HttpContext?.Session.SetString("Role", loginResponse.Role);
                     return RedirectToPage("/FootballPlayers/Index");

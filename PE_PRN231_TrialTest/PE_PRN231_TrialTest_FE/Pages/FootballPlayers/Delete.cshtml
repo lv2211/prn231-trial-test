@@ -43,13 +43,13 @@
             @Html.DisplayFor(model => model.FootballPlayer.Nomination)
         </dd>
         <dt class="col-sm-2">
-            @Html.DisplayNameFor(model => model.FootballPlayer.FootballClub)
+            @Html.DisplayNameFor(model => model.FootballPlayer.ClubName)
         </dt>
         <dd class="col-sm-10">
-            @Html.DisplayFor(model => model.FootballPlayer.FootballClub.FootballClubId)
+            @Html.DisplayFor(model => model.FootballPlayer.ClubName)
         </dd>
     </dl>
-    
+
     <form method="post">
         <input type="hidden" asp-for="FootballPlayer.FootballPlayerId" />
         <input type="submit" value="Delete" class="btn btn-danger" /> |

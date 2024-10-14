@@ -2,12 +2,10 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.OData.Query;
 using Microsoft.AspNetCore.OData.Routing.Controllers;
-using Microsoft.EntityFrameworkCore;
 using PE.Core.Commons;
 using PE.Core.Contracts;
 using PE.Core.Dtos;
 using PE.Infrastructure;
-using PE.Infrastructure.Databases;
 
 namespace PE_PRN231_TrialTest_BE.Controllers
 {
@@ -15,14 +13,11 @@ namespace PE_PRN231_TrialTest_BE.Controllers
     [ApiController]
     public class FootballPlayersController : ODataController
     {
-        private readonly EnglishPremierLeague2024DbContext _context;
         private readonly IFootballPlayerService _footballPlayerService;
 
         public FootballPlayersController(
-            EnglishPremierLeague2024DbContext context,
             IFootballPlayerService footballPlayerService)
         {
-            _context = context;
             _footballPlayerService = footballPlayerService;
         }
 
@@ -82,7 +77,7 @@ namespace PE_PRN231_TrialTest_BE.Controllers
             return Ok(footballPlayer);
         }
 
-        
+
         /// <summary>
         /// Update player
         /// </summary>
@@ -115,7 +110,7 @@ namespace PE_PRN231_TrialTest_BE.Controllers
                 });
             }
             if (!ModelState.IsValid) return BadRequest();
-            
+
             var result = await _footballPlayerService.UpdatePlayer(request);
             if (!result) return BadRequest(new ApiResponseModel<string>
             {
@@ -194,5 +189,13 @@ namespace PE_PRN231_TrialTest_BE.Controllers
             return NoContent();
         }
 
+
+        [HttpGet("clubs")]
+        [ProducesResponseType(StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status404NotFound)]
+        public async Task<ActionResult<IEnumerable<FootballClub>>> GetClubs()
+        {
+            return Ok(await _footballPlayerService.GetClubs());
+        }
     }
 }

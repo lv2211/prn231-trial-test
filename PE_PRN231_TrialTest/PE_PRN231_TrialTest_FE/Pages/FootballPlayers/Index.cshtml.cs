@@ -1,30 +1,69 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
-using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
-using Microsoft.EntityFrameworkCore;
-using PE.Infrastructure;
-using PE.Infrastructure.Databases;
+using System.Net.Http.Headers;
 
 namespace PE_PRN231_TrialTest_FE.Pages.FootballPlayers
 {
     public class IndexModel : PageModel
     {
-        private readonly PE.Infrastructure.Databases.EnglishPremierLeague2024DbContext _context;
+        private readonly IHttpContextAccessor _httpContextAccessor;
+        private readonly HttpClient _httpClient;
 
-        public IndexModel(PE.Infrastructure.Databases.EnglishPremierLeague2024DbContext context)
+        public IndexModel(
+            IHttpContextAccessor httpContextAccessor,
+            HttpClient httpClient)
         {
-            _context = context;
+            _httpContextAccessor = httpContextAccessor;
+            _httpClient = httpClient;
         }
 
-        public IList<FootballPlayer> FootballPlayer { get;set; } = default!;
+        public IList<FootballPlayerResponse> FootballPlayers { get; set; } = new List<FootballPlayerResponse>();
 
-        public async Task OnGetAsync()
+        public async Task<IActionResult> OnGetAsync()
         {
-            FootballPlayer = await _context.FootballPlayers
-                .Include(f => f.FootballClub).ToListAsync();
+            var role = _httpContextAccessor.HttpContext?.Session.GetString("Role");
+            if (role == "1" || role == "2")
+            {
+                var accessToken = _httpContextAccessor.HttpContext?.Session.GetString("AccessToken");
+                if (string.IsNullOrEmpty(accessToken))
+                {
+                    return RedirectToPage("/Login");
+                }
+                // Set the authorization header with Bearer token
+                _httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", accessToken);
+                var apiUrl = $"http://localhost:5213/api/premier-leauge/players";
+                try
+                {
+                    var response = await _httpClient.GetFromJsonAsync<IList<FootballPlayerResponse>>(apiUrl);
+                    if (response != null)
+                        FootballPlayers = response;
+                }
+                catch (HttpRequestException ex)
+                {
+                    ModelState.AddModelError(string.Empty, $"Unable to retrieve players! {ex.Message}");
+                }
+                return Page();
+            }
+            return RedirectToPage("/Login");
         }
+    }
+
+    public class FootballPlayerResponse
+    {
+        public string FootballPlayerId { get; set; } = null!;
+
+        public string FullName { get; set; } = null!;
+
+        public string Achievements { get; set; } = null!;
+
+        public DateTime? Birthday { get; set; }
+
+        public string PlayerExperiences { get; set; } = null!;
+
+        public string Nomination { get; set; } = null!;
+
+        public string? FootballClubId { get; set; }
+
+        public string ClubName { get; set; } = null!;
     }
 }

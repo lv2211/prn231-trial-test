@@ -16,5 +16,7 @@ namespace PE.Core.Contracts
         Task<bool> UpdatePlayer(UpdateFootballPlayerRequest request);
 
         Task<bool> DeletePlayer(FootballPlayer player);
+
+        Task<IEnumerable<FootballClub>> GetClubs();
     }
 }

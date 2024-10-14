@@ -1,63 +1,87 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
-using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
-using Microsoft.EntityFrameworkCore;
-using PE.Infrastructure;
-using PE.Infrastructure.Databases;
+using System.Net.Http.Headers;
 
 namespace PE_PRN231_TrialTest_FE.Pages.FootballPlayers
 {
     public class DeleteModel : PageModel
     {
-        private readonly PE.Infrastructure.Databases.EnglishPremierLeague2024DbContext _context;
+        private readonly HttpClient _httpClient;
+        private readonly IHttpContextAccessor _httpContextAccessor;
 
-        public DeleteModel(PE.Infrastructure.Databases.EnglishPremierLeague2024DbContext context)
+        public DeleteModel(
+            HttpClient httpClient,
+            IHttpContextAccessor httpContextAccessor)
         {
-            _context = context;
+            _httpClient = httpClient;
+            _httpContextAccessor = httpContextAccessor;
         }
 
         [BindProperty]
-        public FootballPlayer FootballPlayer { get; set; } = default!;
+        public FootballPlayerResponse FootballPlayer { get; set; } = default!;
 
         public async Task<IActionResult> OnGetAsync(string id)
         {
-            if (id == null)
+            var role = _httpContextAccessor.HttpContext?.Session.GetString("Role");
+            if (role == "1")
             {
-                return NotFound();
+                var accessToken = _httpContextAccessor.HttpContext?.Session.GetString("AccessToken");
+                if (string.IsNullOrEmpty(accessToken))
+                {
+                    return RedirectToPage("/Login");
+                }
+                if (id == null)
+                {
+                    return NotFound();
+                }
+                var apiUrl = $"http://localhost:5213/api/premier-leauge/players/{id}";
+                // Set the authorization header with Bearer token
+                _httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", accessToken);
+                try
+                {
+                    var response = await _httpClient.GetFromJsonAsync<FootballPlayerResponse>(apiUrl);
+                    if (response != null)
+                        FootballPlayer = response;
+                    else return NotFound();
+                }
+                catch (HttpRequestException ex)
+                {
+                    ModelState.AddModelError(string.Empty, $"Unable to retrieve player! {ex.Message}");
+                }
+                return Page();
             }
+            return RedirectToPage("/Login");
 
-            var footballplayer = await _context.FootballPlayers.FirstOrDefaultAsync(m => m.FootballPlayerId == id);
-
-            if (footballplayer == null)
-            {
-                return NotFound();
-            }
-            else
-            {
-                FootballPlayer = footballplayer;
-            }
-            return Page();
         }
 
         public async Task<IActionResult> OnPostAsync(string id)
         {
+            var accessToken = _httpContextAccessor.HttpContext?.Session.GetString("AccessToken");
+            if (string.IsNullOrEmpty(accessToken))
+            {
+                return RedirectToPage("/Login");
+            }
             if (id == null)
             {
                 return NotFound();
             }
+            // Set the authorization header with Bearer token
+            _httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", accessToken);
+            var apiGetUrl = $"http://localhost:5213/api/premier-leauge/players/{id}";
+            var apiDeleteUrl = $"http://localhost:5213/api/premier-leauge/player/{id}";
 
-            var footballplayer = await _context.FootballPlayers.FindAsync(id);
+            var footballplayer = await _httpClient.GetFromJsonAsync<FootballPlayerResponse>(apiGetUrl);
             if (footballplayer != null)
             {
                 FootballPlayer = footballplayer;
-                _context.FootballPlayers.Remove(FootballPlayer);
-                await _context.SaveChangesAsync();
+                var result = await _httpClient.DeleteAsync(apiDeleteUrl);
+                if (result.IsSuccessStatusCode)
+                {
+                    return RedirectToPage("./Index");
+                }
+                else ModelState.AddModelError(string.Empty, "Unable to delete player!");
             }
-
-            return RedirectToPage("./Index");
+            return Page();
         }
     }
 }
