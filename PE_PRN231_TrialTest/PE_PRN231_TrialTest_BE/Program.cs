@@ -40,7 +40,7 @@ builder.Services.AddDbContext<EnglishPremierLeague2024DbContext>(opt =>
 
 builder.Services.AddAutoMapper(typeof(MappingProfileExtension).Assembly);
 // Options pattern: https://learn.microsoft.com/en-us/dotnet/core/extensions/options
-builder.Configuration.GetSection(nameof(JwtSettings)).Get<JwtSettings>();
+builder.Services.Configure<JwtSettings>(builder.Configuration.GetSection(nameof(JwtSettings)));
 
 var app = builder.Build();
 

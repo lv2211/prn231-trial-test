@@ -6,7 +6,7 @@ using PE.Core.Dtos;
 
 namespace PE_PRN231_TrialTest_BE.Controllers
 {
-    [Route("api/premeir-league-app")]
+    [Route("api/premier-league")]
     [ApiController]
     public class AuthController(IAccountService accountService) : ControllerBase
     {
@@ -17,10 +17,11 @@ namespace PE_PRN231_TrialTest_BE.Controllers
         /// </summary>
         /// <param name="request"></param>
         /// <returns></returns>
-        [HttpPost("sign-in")]
+        [HttpPost("account/sign-in")]
         [AllowAnonymous]
         [ProducesResponseType(StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
+        [ProducesErrorResponseType(typeof(ApiResponseModel<string>))]
         public async Task<ActionResult<ApiResponseModel<SigninAccountResponse>>> Login([FromBody] SigninRequest request)
         {
             //if (string.IsNullOrEmpty(request.Email) || string.IsNullOrEmpty(request.Password))
@@ -31,7 +32,8 @@ namespace PE_PRN231_TrialTest_BE.Controllers
             if (account is null) return NotFound(new ApiResponseModel<string>
             {
                 StatusCode = System.Net.HttpStatusCode.NotFound,
-                Message = "Account is not found! Please check email and password again."
+                Message = "Account is not found! Please check email and password again.",
+                Response = null
             });
             return Ok(new ApiResponseModel<SigninAccountResponse>
             {

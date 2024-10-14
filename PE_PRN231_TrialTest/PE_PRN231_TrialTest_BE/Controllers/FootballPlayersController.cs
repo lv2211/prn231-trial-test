@@ -5,7 +5,7 @@ using PE.Infrastructure.Databases;
 
 namespace PE_PRN231_TrialTest_BE.Controllers
 {
-    [Route("api/premeir-league-app")]
+    [Route("api/premier-leauge")]
     [ApiController]
     public class FootballPlayersController : ControllerBase
     {
