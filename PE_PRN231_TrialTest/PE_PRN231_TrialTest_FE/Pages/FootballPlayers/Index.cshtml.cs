@@ -19,7 +19,7 @@ namespace PE_PRN231_TrialTest_FE.Pages.FootballPlayers
 
         public IList<FootballPlayerResponse> FootballPlayers { get; set; } = new List<FootballPlayerResponse>();
 
-        public async Task<IActionResult> OnGetAsync()
+        public async Task<IActionResult> OnGetAsync(string? searchTerm)
         {
             var role = _httpContextAccessor.HttpContext?.Session.GetString("Role");
             if (role == "1" || role == "2")
@@ -32,6 +32,10 @@ namespace PE_PRN231_TrialTest_FE.Pages.FootballPlayers
                 // Set the authorization header with Bearer token
                 _httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", accessToken);
                 var apiUrl = $"http://localhost:5213/api/premier-leauge/players";
+                if (!string.IsNullOrEmpty(searchTerm))
+                {
+                    apiUrl += $"?$filter=contains(Achievements, '{searchTerm}') or contains(Nomination, '{searchTerm}')";
+                }
                 try
                 {
                     var response = await _httpClient.GetFromJsonAsync<IList<FootballPlayerResponse>>(apiUrl);

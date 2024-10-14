@@ -10,6 +10,14 @@
 <p>
     <a asp-page="Create">Create New</a>
 </p>
+
+<form method="get">
+    <div class="form-group">
+        <input type="text" name="searchTerm" value="@Request.Query["searchTerm"]" class="form-control" placeholder="Search Achievements or Nomination" />
+    </div>
+    <button type="submit" class="btn btn-primary">Search</button>
+</form>
+
 <table class="table">
     <thead>
         <tr>

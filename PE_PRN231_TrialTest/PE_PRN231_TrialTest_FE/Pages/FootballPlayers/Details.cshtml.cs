@@ -1,43 +1,54 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
-using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
-using Microsoft.EntityFrameworkCore;
-using PE.Infrastructure;
-using PE.Infrastructure.Databases;
+using System.Net.Http.Headers;
 
 namespace PE_PRN231_TrialTest_FE.Pages.FootballPlayers
 {
     public class DetailsModel : PageModel
     {
-        private readonly PE.Infrastructure.Databases.EnglishPremierLeague2024DbContext _context;
+        private readonly HttpClient _httpClient;
+        private readonly IHttpContextAccessor _httpContextAccessor;
 
-        public DetailsModel(PE.Infrastructure.Databases.EnglishPremierLeague2024DbContext context)
+        public DetailsModel(
+            HttpClient httpClient,
+            IHttpContextAccessor httpContextAccessor)
         {
-            _context = context;
+            _httpClient = httpClient;
+            _httpContextAccessor = httpContextAccessor;
         }
 
-        public FootballPlayer FootballPlayer { get; set; } = default!;
+        public FootballPlayerResponse FootballPlayer { get; set; } = default!;
 
         public async Task<IActionResult> OnGetAsync(string id)
         {
-            if (id == null)
+            var role = _httpContextAccessor.HttpContext?.Session.GetString("Role");
+            if (role == "1" || role == "2")
             {
-                return NotFound();
+                var accessToken = _httpContextAccessor.HttpContext?.Session.GetString("AccessToken");
+                if (string.IsNullOrEmpty(accessToken))
+                {
+                    return RedirectToPage("/Login");
+                }
+                if (id == null)
+                {
+                    return NotFound();
+                }
+                _httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", accessToken);
+                var apiUrl = $"http://localhost:5213/api/premier-leauge/players/{id}";
+                try
+                {
+                    var response = await _httpClient.GetFromJsonAsync<FootballPlayerResponse>(apiUrl);
+                    if (response != null)
+                        FootballPlayer = response;
+                    else return NotFound();
+                }
+                catch (HttpRequestException ex)
+                {
+                    ModelState.AddModelError(string.Empty, $"Unable to retrieve player! {ex.Message}");
+                }
+                return Page();
             }
-
-            var footballplayer = await _context.FootballPlayers.FirstOrDefaultAsync(m => m.FootballPlayerId == id);
-            if (footballplayer == null)
-            {
-                return NotFound();
-            }
-            else
-            {
-                FootballPlayer = footballplayer;
-            }
-            return Page();
+            return RedirectToPage("/Login");
         }
     }
 }
